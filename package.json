@@ -1,6 +1,6 @@
 {
   "name": "helmetdetection",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Testing Helmet detection model in TensorFlow.js",
   "main": "dist/index.js",
   "unpkg": "dist/helmet-detection.min.js",
@@ -10,7 +10,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ayadima/helmet_detection.git"
+    "url": "https://github.com/ayadima/helmet-detection.git"
   },
   "peerDependencies": {
     "@tensorflow/tfjs-converter": "1.6.0",

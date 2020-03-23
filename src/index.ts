@@ -86,7 +86,7 @@ const indexTensor = tf.tidy(() => {
   const boxes2 =
       tf.tensor2d(boxes, [result[3].shape[1], result[3].shape[3]]);
   return tf.image.nonMaxSuppression(
-      boxes2, maxScores, 0.5, 0.5);
+      boxes2, maxScores,100, 0.5, 0.5);
 });
 
 const indexes = indexTensor.dataSync() as Float32Array;
