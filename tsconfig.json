@@ -23,8 +23,7 @@
     "downlevelIteration": true
   },
   "include": [
-    "src/**/*",
-    "assets"
+    "src/**/*"
   ],
   "exclude": [
     "dist/",

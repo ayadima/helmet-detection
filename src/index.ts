@@ -18,8 +18,6 @@
 import * as tfconv from '@tensorflow/tfjs-converter';
 import * as tf from '@tensorflow/tfjs-core';
 
-const BASE_PATH = '/assets/json';
-
 export {version} from './version';
 
 export interface DetectedHelmet {
@@ -33,14 +31,14 @@ export interface DetectedHelmet {
 }
 
 
-export async function load() {
+export async function load(path : string) {
   if (tf == null) {
     throw new Error(
         `Cannot find TensorFlow.js. If you are using a <script> tag, please ` +
         `also include @tensorflow/tfjs on the page before using this model.`);
   }
 
-  const helmetDetection = new HelmetDetection();
+  const helmetDetection = new HelmetDetection(path);
   await helmetDetection.load();
   return helmetDetection;
 }
@@ -49,8 +47,8 @@ export class HelmetDetection {
   private modelPath: string;
   private model: tfconv.GraphModel;
 
-  constructor() {
-    this.modelPath = BASE_PATH;
+  constructor(path : string) {
+    this.modelPath = path;
   }
 
   async load() {
