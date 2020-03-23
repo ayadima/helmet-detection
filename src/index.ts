@@ -1,33 +1,11 @@
-/**
- * @license
- * Copyright 2019 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =============================================================================
- */
-
 import * as tfconv from '@tensorflow/tfjs-converter';
 import * as tf from '@tensorflow/tfjs-core';
 
 export {version} from './version';
 
 export interface DetectedHelmet {
-  num_detections: Float32Array,
-  raw_detection_scores: Float32Array,
-  detection_boxes: Float32Array,
-  detection_scores: Float32Array,
-  detection_classes: Float32Array,
-  raw_detection_boxes: Float32Array,
-  detection_multiclass_scores: Float32Array
+  detection_boxes: Int32Array,
+  detection_classes: Int32Array
 }
 
 
@@ -66,9 +44,6 @@ export class HelmetDetection {
    *
    * @param img The image to classify. Can be a tensor or a DOM element image,
    * video, or canvas.
-   * @param maxNumBoxes The maximum number of bounding boxes of detected
-   * objects. There can be multiple objects of the same class, but at different
-   * locations. Defaults to 20.
    */
   private async infer(
       img: tf.Tensor3D|ImageData|HTMLImageElement|HTMLCanvasElement|
@@ -88,13 +63,8 @@ export class HelmetDetection {
     // and 4 is the four coordinates of the box.
     const result = await this.model.executeAsync(batched) as tf.Tensor[];
 
-    const num_detections =  result[0].dataSync() as Float32Array;
-    const raw_detection_scores = result[0].dataSync() as Float32Array;
-    const detection_boxes = result[0].dataSync() as Float32Array;
-    const detection_scores = result[0].dataSync() as Float32Array;
-    const detection_classes = result[0].dataSync() as Float32Array;
-    const raw_detection_boxes = result[0].dataSync() as Float32Array;
-    const detection_multiclass_scores = result[0].dataSync() as Float32Array;
+    const detection_boxes = result[2].dataSync() as Int32Array;
+    const detection_classes = result[4].dataSync() as Int32Array;
 
     // clean the webgl tensors
     batched.dispose();
@@ -103,13 +73,8 @@ export class HelmetDetection {
     const objects: DetectedHelmet[] = [];
 
     objects.push({
-      num_detections: num_detections,
-      raw_detection_scores: raw_detection_scores,
       detection_boxes: detection_boxes,
-      detection_scores: detection_scores,
-      detection_classes: detection_classes,
-      raw_detection_boxes: raw_detection_boxes,
-      detection_multiclass_scores: detection_multiclass_scores
+      detection_classes: detection_classes
     });
 
     return objects;
