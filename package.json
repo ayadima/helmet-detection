@@ -13,7 +13,8 @@
     "url": "https://github.com/ayadima/helmet_detection.git"
   },
   "peerDependencies": {
-    "@tensorflow/tfjs-converter": "1.6.0"
+    "@tensorflow/tfjs-converter": "1.6.0",
+    "@tensorflow/tfjs-core": "1.6.0"
   },
   "devDependencies": {
     "@tensorflow/tfjs-converter": "1.6.0",
