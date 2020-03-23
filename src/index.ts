@@ -2,12 +2,14 @@ import * as tfconv from '@tensorflow/tfjs-converter';
 import * as tf from '@tensorflow/tfjs-core';
 
 export {version} from './version';
+import {CLASSES} from './classes';
+
 
 export interface DetectedHelmet {
-  detection_boxes: Int32Array,
-  detection_classes: Int32Array
+  bbox: [number, number, number, number];  // [x, y, width, height]
+  class: string;
+  score: number;
 }
-
 
 export async function load(path : string) {
   if (tf == null) {
@@ -56,6 +58,9 @@ export class HelmetDetection {
       return img.expandDims(0);
     });
 
+    const height = batched.shape[1];
+    const width = batched.shape[2];
+
     // model returns two tensors:
     // 1. box classification score with shape of [1, 1917, 90]
     // 2. box location with shape of [1, 1917, 1, 4]
@@ -63,22 +68,84 @@ export class HelmetDetection {
     // and 4 is the four coordinates of the box.
     const result = await this.model.executeAsync(batched) as tf.Tensor[];
 
-    const detection_boxes = result[2].dataSync() as Int32Array;
-    const detection_classes = result[4].dataSync() as Int32Array;
+    const boxes = result[2].dataSync() as Float32Array;
+    const scores = result[3].dataSync() as Float32Array;
+    //const detection_classes = result[4].dataSync() as Float32Array;
 
     // clean the webgl tensors
     batched.dispose();
     tf.dispose(result);
 
-    const objects: DetectedHelmet[] = [];
+    const [maxScores, classes] =
+    this.calculateMaxScores(scores, result[2].shape[1], result[2].shape[2]);
 
-    objects.push({
-      detection_boxes: detection_boxes,
-      detection_classes: detection_classes
-    });
+const prevBackend = tf.getBackend();
+// run post process in cpu
+tf.setBackend('cpu');
+const indexTensor = tf.tidy(() => {
+  const boxes2 =
+      tf.tensor2d(boxes, [result[3].shape[1], result[3].shape[3]]);
+  return tf.image.nonMaxSuppression(
+      boxes2, maxScores, 0.5, 0.5);
+});
 
-    return objects;
+const indexes = indexTensor.dataSync() as Float32Array;
+indexTensor.dispose();
+
+// restore previous backend
+tf.setBackend(prevBackend);
+
+return this.buildDetectedObjects(
+    width, height, boxes, maxScores, indexes, classes);
+}
+
+private buildDetectedObjects(
+  width: number, height: number, boxes: Float32Array, scores: number[],
+  indexes: Float32Array, classes: number[]): DetectedHelmet[] {
+const count = indexes.length;
+const objects: DetectedHelmet[] = [];
+for (let i = 0; i < count; i++) {
+  const bbox = [];
+  for (let j = 0; j < 4; j++) {
+    bbox[j] = boxes[indexes[i] * 4 + j];
   }
+  const minY = bbox[0] * height;
+  const minX = bbox[1] * width;
+  const maxY = bbox[2] * height;
+  const maxX = bbox[3] * width;
+  bbox[0] = minX;
+  bbox[1] = minY;
+  bbox[2] = maxX - minX;
+  bbox[3] = maxY - minY;
+  objects.push({
+    bbox: bbox as [number, number, number, number],
+    class: CLASSES[classes[indexes[i]] + 1].displayName,
+    score: scores[indexes[i]]
+  });
+}
+return objects;
+}
+
+private calculateMaxScores(
+  scores: Float32Array, numBoxes: number,
+  numClasses: number): [number[], number[]] {
+const maxes = [];
+const classes = [];
+for (let i = 0; i < numBoxes; i++) {
+  let max = Number.MIN_VALUE;
+  let index = -1;
+  for (let j = 0; j < numClasses; j++) {
+    if (scores[i * numClasses + j] > max) {
+      max = scores[i * numClasses + j];
+      index = j;
+    }
+  }
+  maxes[i] = max;
+  classes[i] = index;
+}
+return [maxes, classes];
+}
+
 
   /**
    * Detect objects for an image returning a list of bounding boxes with
