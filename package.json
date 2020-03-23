@@ -1,6 +1,6 @@
 {
   "name": "helmetdetection",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Testing Helmet detection model in TensorFlow.js",
   "main": "dist/index.js",
   "unpkg": "dist/helmet-detection.min.js",
