@@ -2,17 +2,13 @@ import * as tfconv from '@tensorflow/tfjs-converter';
 import * as tf from '@tensorflow/tfjs-core';
 
 export {version} from './version';
-//import {CLASSES} from './classes';
+import {CLASSES} from './classes';
 
 
 export interface DetectedHelmet {
-  /*
   bbox: [number, number, number, number];  // [x, y, width, height]
   class: string;
-  score: number;*/
-  boxes:Float32Array,
-  scores :Float32Array,
-  detection_classes :Float32Array
+  score: number;
 }
 
 export async function load(path : string) {
@@ -62,8 +58,8 @@ export class HelmetDetection {
       return img.expandDims(0);
     });
 
-    //const height = batched.shape[1];
-    //const width = batched.shape[2];
+    const height = batched.shape[1];
+    const width = batched.shape[2];
 
     // model returns two tensors:
     // 1. box classification score with shape of [1, 1917, 90]
@@ -79,85 +75,54 @@ export class HelmetDetection {
     // clean the webgl tensors
     batched.dispose();
     tf.dispose(result);
-/*
-    const [maxScores, classes] =
-    this.calculateMaxScores(scores, result[2].shape[1], result[2].shape[2]);
 
-const prevBackend = tf.getBackend();
-// run post process in cpu
-tf.setBackend('cpu');
-const indexTensor = tf.tidy(() => {
-  const boxes2 =
-      tf.tensor2d(boxes, [result[3].shape[1], result[3].shape[3]]);
-  return tf.image.nonMaxSuppression(
-      boxes2, maxScores,100, 0.5, 0.5);
-});
 
-const indexes = indexTensor.dataSync() as Float32Array;
-indexTensor.dispose();
+    const prevBackend = tf.getBackend();
+    // run post process in cpu
+    tf.setBackend('cpu');
+    const indexTensor = tf.tidy(() => {
+      const boxes2 =
+          tf.tensor2d(boxes, [result[2].shape[1], result[2].shape[2]]);
+      return tf.image.nonMaxSuppression(
+          boxes2, scores,100, 0.4, 0.4);
+    });
 
-// restore previous backend
-tf.setBackend(prevBackend);
-*/
-const objects: DetectedHelmet[] = [];
+      const indexes = indexTensor.dataSync() as Float32Array;
+      indexTensor.dispose();
 
-objects.push({
-  boxes : boxes,
-  scores: scores,
-  detection_classes: detection_classes
-})
-/*
-return this.buildDetectedObjects(
-    width, height, boxes, maxScores, indexes, classes);*/
-    return objects
-}
-/*
+      // restore previous backend
+      tf.setBackend(prevBackend);
+
+      return this.buildDetectedObjects(
+          width, height, boxes, scores, indexes, detection_classes);
+      }
+
 private buildDetectedObjects(
-  width: number, height: number, boxes: Float32Array, scores: number[],
-  indexes: Float32Array, classes: number[]): DetectedHelmet[] {
-const count = indexes.length;
-const objects: DetectedHelmet[] = [];
-for (let i = 0; i < count; i++) {
-  const bbox = [];
-  for (let j = 0; j < 4; j++) {
-    bbox[j] = boxes[indexes[i] * 4 + j];
-  }
-  const minY = bbox[0] * height;
-  const minX = bbox[1] * width;
-  const maxY = bbox[2] * height;
-  const maxX = bbox[3] * width;
-  bbox[0] = minX;
-  bbox[1] = minY;
-  bbox[2] = maxX - minX;
-  bbox[3] = maxY - minY;
-  objects.push({
-    bbox: bbox as [number, number, number, number],
-    class: CLASSES[classes[indexes[i]] + 1].displayName,
-    score: scores[indexes[i]]
-  });
-}
-return objects;
-}
-
-private calculateMaxScores(
-  scores: Float32Array, numBoxes: number,
-  numClasses: number): [number[], number[]] {
-const maxes = [];
-const classes = [];
-for (let i = 0; i < numBoxes; i++) {
-  let max = Number.MIN_VALUE;
-  let index = -1;
-  for (let j = 0; j < numClasses; j++) {
-    if (scores[i * numClasses + j] > max) {
-      max = scores[i * numClasses + j];
-      index = j;
+  width: number, height: number, boxes: Float32Array, scores: Float32Array,
+  indexes: Float32Array, classes: Float32Array): DetectedHelmet[] {
+    const count = indexes.length;
+    const objects: DetectedHelmet[] = [];
+    for (let i = 0; i < count; i++) {
+      const bbox = [];
+      for (let j = 0; j < 4; j++) {
+        bbox[j] = boxes[indexes[i] * 4 + j];
+      }
+      const minY = bbox[0] * height;
+      const minX = bbox[1] * width;
+      const maxY = bbox[2] * height;
+      const maxX = bbox[3] * width;
+      bbox[0] = minX;
+      bbox[1] = minY;
+      bbox[2] = maxX - minX;
+      bbox[3] = maxY - minY;
+      objects.push({
+        bbox: bbox as [number, number, number, number],
+        class: CLASSES[classes[indexes[i]] + 1].displayName,
+        score: scores[indexes[i]]
+      });
     }
-  }
-  maxes[i] = max;
-  classes[i] = index;
+    return objects;
 }
-return [maxes, classes];
-}*/
 
 
   /**

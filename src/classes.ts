@@ -13,6 +13,6 @@ export interface HelmetDetectionClass {
     2: {
       name: 'hat',
       id: 2,
-      displayName: 'helmet',
+      displayName: 'person with helmet',
     }
   };
