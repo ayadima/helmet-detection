@@ -84,7 +84,7 @@ export class HelmetDetection {
       const boxes2 =
           tf.tensor2d(boxes, [result[2].shape[1], result[2].shape[2]]);
       return tf.image.nonMaxSuppression(
-          boxes2, scores,100, 0.4, 0.4);
+          boxes2, scores,100, 0.6, 0.6);
     });
 
       const indexes = indexTensor.dataSync() as Float32Array;
