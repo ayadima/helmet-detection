@@ -117,7 +117,7 @@ private buildDetectedObjects(
       bbox[3] = maxY - minY;
       objects.push({
         bbox: bbox as [number, number, number, number],
-        class: CLASSES[classes[indexes[i]] + 1].displayName,
+        class: CLASSES[classes[indexes[i]]].displayName,
         score: scores[indexes[i]]
       });
     }
