@@ -26,9 +26,6 @@ export async function load(path : string) {
 export class HelmetDetection {
   private modelPath: string;
   private model: tfconv.GraphModel;
-  private boxes_index: number;
-  private scores_index: number;
-  private classes_index: number;
 
   constructor(path : string) {
     this.modelPath = path;
@@ -36,16 +33,6 @@ export class HelmetDetection {
 
   async load() {
     this.model = await tfconv.loadGraphModel(this.modelPath);
-
-    for (var i=0; i< this.model.outputs.length; i++){
-      if(this.model.outputs[i].name === 'detection_boxes'){
-        this.boxes_index = i
-      } else if (this.model.outputs[i].name === 'detection_scores'){
-        this.scores_index = i
-      } else if (this.model.outputs[i].name === 'detection_classes'){
-        this.classes_index = i
-      }
-    }
 
     // Warmup the model.
     const result = await this.model.executeAsync(tf.zeros([1, 300, 300, 3])) as
@@ -74,6 +61,21 @@ export class HelmetDetection {
     const height = batched.shape[1];
     const width = batched.shape[2];
 
+    let boxes_index;
+    let scores_index;
+    let classes_index;
+
+
+    for (var i=0; i< this.model.outputs.length; i++){
+      if(this.model.outputs[i].name === 'detection_boxes'){
+        boxes_index = i
+      } else if (this.model.outputs[i].name === 'detection_scores'){
+        scores_index = i
+      } else if (this.model.outputs[i].name === 'detection_classes'){
+        classes_index = i
+      }
+    }
+
     // model returns three main tensors:
     // 1. box classification score 
     // 2. box location 
@@ -81,9 +83,9 @@ export class HelmetDetection {
     const result = await this.model.executeAsync(batched) as tf.Tensor[];
 
 
-    const boxes = result[this.boxes_index].dataSync() as Float32Array;
-    const scores = result[this.scores_index].dataSync() as Float32Array;
-    const detection_classes = result[this.classes_index].dataSync() as Float32Array;
+    const boxes = result[boxes_index].dataSync() as Float32Array;
+    const scores = result[scores_index].dataSync() as Float32Array;
+    const detection_classes = result[classes_index].dataSync() as Float32Array;
 
     // clean the webgl tensors
     batched.dispose();
@@ -95,7 +97,7 @@ export class HelmetDetection {
     tf.setBackend('cpu');
     const indexTensor = tf.tidy(() => {
       const boxes2 =
-          tf.tensor2d(boxes, [result[this.boxes_index].shape[1], result[this.boxes_index].shape[2]]);
+          tf.tensor2d(boxes, [result[boxes_index].shape[1], result[boxes_index].shape[2]]);
       return tf.image.nonMaxSuppression(
           boxes2, scores,100, 0.6, 0.6);
     });

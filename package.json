@@ -1,6 +1,6 @@
 {
   "name": "helmetdetection",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Testing Helmet detection model in TensorFlow.js",
   "main": "dist/index.js",
   "unpkg": "dist/helmet-detection.min.js",
@@ -41,5 +41,8 @@
     "test": "yarn build && ts-node run_tests.ts"
   },
   "license": "MIT",
-  "author": "Ayadi Mahdi"
+  "author": "Ayadi Mahdi",
+  "dependencies": {
+    "helmetdetection": "1.1.4"
+  }
 }
