@@ -36,7 +36,7 @@ export class HelmetDetection {
 
   async load() {
     this.model = await tfconv.loadGraphModel(this.modelPath);
-    console.info('in package', this.model)
+
     for (var i=0; i< this.model.outputs.length; i++){
       if(this.model.outputs[i].name === 'detection_boxes'){
         this.boxes_index = i
@@ -74,14 +74,12 @@ export class HelmetDetection {
     const height = batched.shape[1];
     const width = batched.shape[2];
 
-    // model returns two tensors:
-    // 1. box classification score with shape of [1, 1917, 90]
-    // 2. box location with shape of [1, 1917, 1, 4]
-    // where 1917 is the number of box detectors, 90 is the number of classes.
-    // and 4 is the four coordinates of the box.
+    // model returns three main tensors:
+    // 1. box classification score 
+    // 2. box location 
+    // 3. box detected classes
     const result = await this.model.executeAsync(batched) as tf.Tensor[];
 
-    console.info('boxes', this.boxes_index)
 
     const boxes = result[this.boxes_index].dataSync() as Float32Array;
     const scores = result[this.scores_index].dataSync() as Float32Array;
