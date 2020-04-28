@@ -5,12 +5,12 @@ export interface HelmetDetectionClass {
   }
   
   export const CLASSES: {[key: string]: HelmetDetectionClass} = {
-    1: {
+    2: {
       name: 'person',
       id: 1,
       displayName: 'person',
     },
-    2: {
+    1: {
       name: 'hat',
       id: 2,
       displayName: 'person with helmet',
