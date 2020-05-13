@@ -23,6 +23,18 @@ export async function load(path : string) {
   return helmetDetection;
 }
 
+export async function loadNative(handler : tf.io.IOHandler) {
+  if (tf == null) {
+    throw new Error(
+        `Cannot find TensorFlow.js. If you are using a <script> tag, please ` +
+        `also include @tensorflow/tfjs on the page before using this model.`);
+  }
+
+  const helmetDetection = new HelmetDetection('Local Native');
+  await helmetDetection.loadNativeModel(handler);
+  return helmetDetection;
+}
+
 export class HelmetDetection {
   private modelPath: string;
   private model: tfconv.GraphModel;
@@ -34,6 +46,15 @@ export class HelmetDetection {
   async load() {
     this.model = await tfconv.loadGraphModel(this.modelPath);
 
+    // Warmup the model.
+    const result = await this.model.executeAsync(tf.zeros([1, 300, 300, 3])) as
+        tf.Tensor[];
+    await Promise.all(result.map(t => t.data()));
+    result.map(t => t.dispose());
+  }
+
+  async loadNativeModel(handler : tf.io.IOHandler) {
+    this.model = await tfconv.loadGraphModel(handler);
     // Warmup the model.
     const result = await this.model.executeAsync(tf.zeros([1, 300, 300, 3])) as
         tf.Tensor[];
