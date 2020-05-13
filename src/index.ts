@@ -72,13 +72,7 @@ export class HelmetDetection {
       img: tf.Tensor3D|ImageData|HTMLImageElement|HTMLCanvasElement|
       HTMLVideoElement): Promise<DetectedHelmet[]> {
     tf.enableProdMode()
-    try{
-      tf.setBackend('webgl')
-    } catch(e) {
-      try {
-        tf.setBackend('rn-webgl')
-      }catch(e){}
-    }
+    tf.setBackend('webgl')
     tf.webgl.forceHalfFloat()
     const batched = tf.tidy(() => {
       if (!(img instanceof tf.Tensor)) {
