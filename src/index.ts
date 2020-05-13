@@ -70,14 +70,16 @@ export class HelmetDetection {
    */
   private async infer(
       img: tf.Tensor3D|ImageData|HTMLImageElement|HTMLCanvasElement|
-      HTMLVideoElement, native? : boolean): Promise<DetectedHelmet[]> {
-        tf.enableProdMode()
-        if(native){
-          tf.setBackend('rn-webgl')
-        } else {
-          tf.setBackend('webgl')
-        }
-        tf.webgl.forceHalfFloat()
+      HTMLVideoElement): Promise<DetectedHelmet[]> {
+    tf.enableProdMode()
+    try{
+      tf.setBackend('webgl')
+    } catch(e) {
+      try {
+        tf.setBackend('rn-webgl')
+      }catch(e){}
+    }
+    tf.webgl.forceHalfFloat()
     const batched = tf.tidy(() => {
       if (!(img instanceof tf.Tensor)) {
         img = tf.browser.fromPixels(img);
@@ -178,10 +180,7 @@ private buildDetectedObjects(
    */
   async detect(
       img: tf.Tensor3D|ImageData|HTMLImageElement|HTMLCanvasElement|
-      HTMLVideoElement, native? : boolean): Promise<DetectedHelmet[]> {
-        if(native){
-          return this.infer(img, native)
-        }
+      HTMLVideoElement): Promise<DetectedHelmet[]> {
     return this.infer(img);
   }
 
