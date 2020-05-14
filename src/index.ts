@@ -47,19 +47,23 @@ export class HelmetDetection {
     this.model = await tfconv.loadGraphModel(this.modelPath);
 
     // Warmup the model.
-    const result = await this.model.executeAsync(tf.zeros([1, 300, 300, 3])) as
-        tf.Tensor[];
+    const zeroTensor = tf.zeros([1, 300, 300, 3], 'int32');
+    // Warmup the model.
+    const result = await this.model.executeAsync(zeroTensor) as tf.Tensor[];
     await Promise.all(result.map(t => t.data()));
     result.map(t => t.dispose());
+    zeroTensor.dispose();
   }
 
   async loadNativeModel(handler : tf.io.IOHandler) {
     this.model = await tfconv.loadGraphModel(handler);
+
+    const zeroTensor = tf.zeros([1, 300, 300, 3], 'int32');
     // Warmup the model.
-    const result = await this.model.executeAsync(tf.zeros([1, 300, 300, 3])) as
-        tf.Tensor[];
+    const result = await this.model.executeAsync(zeroTensor) as tf.Tensor[];
     await Promise.all(result.map(t => t.data()));
     result.map(t => t.dispose());
+    zeroTensor.dispose();
   }
 
   /**
@@ -71,9 +75,6 @@ export class HelmetDetection {
   private async infer(
       img: tf.Tensor3D|ImageData|HTMLImageElement|HTMLCanvasElement|
       HTMLVideoElement): Promise<DetectedHelmet[]> {
-    tf.enableProdMode()
-    tf.setBackend('webgl')
-    tf.webgl.forceHalfFloat()
     const batched = tf.tidy(() => {
       if (!(img instanceof tf.Tensor)) {
         img = tf.browser.fromPixels(img);
